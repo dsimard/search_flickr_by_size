@@ -13,6 +13,12 @@
   		background-repeat:no-repeat; 
   	}
   	
+  	#photo {
+  		position:fixed;
+  		right:0;
+  		top:0;
+  	}
+  	
   	.photo {
   		xbackground-color:#000;
   		float:left;
@@ -30,7 +36,7 @@
 <script>
 $(document).ready(function() {
 	var photoUrl = function(photo, size) {
-		if (size == 0) size = ""; 
+		if (size == 0 || size == null) size = ""; 
 		
 		size = size.toLowerCase();
 		
@@ -44,6 +50,19 @@ $(document).ready(function() {
 			photo.server, "/", photo.id, "_", photo.secret, sizes[size], ".jpg"]
 		return b.join("");
 	}
+	
+	var showPhoto = function(photo, size) {
+		$("#photo").remove();
+		$("body")
+			.append(
+				$("<img>")
+					.attr("id", "photo")
+					.attr("src", photoUrl(photo, size))
+					.click(function() {
+						$(this).remove();
+					})
+			)		
+	}
 
 	var search = function() {
 		$.getJSON(
@@ -53,7 +72,7 @@ $(document).ready(function() {
 				format : "json",
 				//sort: "relevance",
 				text : $("#search").val(),
-				per_page: 1,
+				per_page: 3,
 				page: 1
 			},
 			function(data) {
@@ -82,12 +101,22 @@ $(document).ready(function() {
 													.append(
 														$("<a>")
 															.addClass("size")
-															.attr("href", photoUrl(photo, this.label))
+															.attr("href", "javascript:void(0);")
+															.attr("title", this.label)
 															.text([this.height, this.width].join("x"))
+															.click(function() {
+																showPhoto(photo, $(this).attr("title"));
+															})
 													)
 											})
 										}
 									)
+									
+									// Unbind this event
+									$(this).unbind("load");
+								})
+								.click(function() {
+									showPhoto(photo);
 								})
 							)
 							.append(
