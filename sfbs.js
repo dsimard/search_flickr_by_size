@@ -31,16 +31,72 @@ $(document).ready(function() {
 			)		
 	}
 	
+	var loadPhoto = function(photo, size) {
+		var div = $("<div>").addClass("photo").attr("id", photo.id);
+			
+		var img = new Image();
+		
+		$(img)
+			.attr("src", photoUrl(photo, "square"))
+			.click(function() { 
+				showPhoto(photo)
+			})
+			.load(function() {
+				if (size.isValid()) {
+					$.getJSON("http://api.flickr.com/services/rest/?jsoncallback=?",
+						{ method : "flickr.photos.getSizes",
+							api_key : "b89c532ba8e26c1150bbdc2f0bc1f717",
+							format : "json",
+							photo_id: photo.id
+						},
+						function(data) {
+							if (size.match(data.sizes.size)) {
+								$.each(data.sizes.size, function() {
+									div.append(
+										$("<a>")
+											.addClass("size")
+											.attr("href", "javascript:void(0);")
+											.attr("title", this.label)
+											.text([this.height, this.width].join("x"))
+											.click(function() {
+												showPhoto(photo, $(this).attr("title"));
+											})
+									)
+								}) // each
+							} else {
+								$("#wrongsize").show();
+								var count = parseInt($("#wrongsize .count").text());
+								if (isNaN(count)) count = 0;
+								$("#wrongsize .count").text(count+1);
+								div.addClass("wrongsize").css("opacity", 0.5);
+							}
+						})
+				}
+				
+				// Append the photo
+				$(this).appendTo(div.appendTo($("#content")));
+				
+				// Append a link to the photo on flickr
+				div.append(
+					$("<a>").text("link")
+						.addClass("link")
+						.attr("href", "http://www.flickr.com/photos/"+photo.owner+"/"+photo.id)
+						.attr("target", "_blank")
+				)
+			});
+	}
+	
 	var search = function() {
 		page++;
 		var size = new Size($("#size").val());
+		
+		$(".wrongsize").hide();
 	
 		$.getJSON(
 			"http://api.flickr.com/services/rest/?jsoncallback=?",
 			{ method : "flickr.photos.search",
 				api_key : "b89c532ba8e26c1150bbdc2f0bc1f717",
 				format : "json",
-				//sort : "relevance",
 				text : $("#search").val(),
 				per_page: 100,
 				page: page
@@ -49,57 +105,7 @@ $(document).ready(function() {
 				if (page == 1) $("#content").empty();
 
 				$.each(data.photos.photo, function() {
-					var photo = this;
-						
-					$("#content").append(
-						$("<div>")
-							.addClass("photo")
-							.attr("id", photo.id)
-							.append(
-								$("<img>")
-								.attr("src", photoUrl(photo, "thumbnail"))
-								// When img is loaded, get the size
-								.load(function() {
-									if (size.isValid()) {
-										$.getJSON("http://api.flickr.com/services/rest/?jsoncallback=?",
-											{ method : "flickr.photos.getSizes",
-												api_key : "b89c532ba8e26c1150bbdc2f0bc1f717",
-												format : "json",
-												photo_id: photo.id
-											},
-											function(data) {
-												if (size.match(data.sizes.size)) {
-													$.each(data.sizes.size, function() {
-														$("#"+photo.id)
-															.append(
-																$("<a>")
-																	.addClass("size")
-																	.attr("href", "javascript:void(0);")
-																	.attr("title", this.label)
-																	.text([this.height, this.width].join("x"))
-																	.click(function() {
-																		showPhoto(photo, $(this).attr("title"));
-																	})
-															)
-													})
-												} else {
-													$("#"+photo.id).fadeOut().addClass("wrongSize");
-												} // if size match
-											}
-										)
-									}
-								})
-								.click(function() {
-									showPhoto(photo);
-								})
-							)
-							.append(
-								$("<a>").text("link")
-									.addClass("link")
-									.attr("href", "http://www.flickr.com/photos/"+this.owner+"/"+this.id)
-									.attr("target", "_blank")
-							)							
-					);
+					loadPhoto(this, size);							
 				});
 			}
 		);
@@ -108,6 +114,7 @@ $(document).ready(function() {
 	// Creates a new search
 	var new_search = function() {
 		page = 0;
+		$("#wrongsize .count").text("");
 		search();
 	}
 	
@@ -121,6 +128,10 @@ $(document).ready(function() {
 	
 	$("#go").click(function() {
 		new_search();
+	});
+	
+	$("#wrongsize a").click(function() {
+		$(".wrongsize").toggle();
 	});
 	
 	new_search();
@@ -171,5 +182,3 @@ Size.prototype.match = function(sizes) {
 	
 	return m;
 }
-
-

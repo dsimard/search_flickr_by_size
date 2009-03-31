@@ -24,6 +24,7 @@
   	.photo {
   		float:left;
   		font-size:60%;
+  		padding:1em;
   	}  	
   	
 	  	.photo img {
@@ -34,15 +35,33 @@
 	  		display:block;
 	  	}
 	  	
+	  	.wrongsize {
+	  		display:none;
+	  	}
+	  	
+	  #wrongsize {
+	  	display:none;
+	  }
+	  
+	  	.count {
+	  	}
+	  	
+	  	#wrongsize .hide {
+	  		display:none;
+	  	}
+	  	
 	  #more {
 	  	width:150%;
 	  }
   </style>
 </head>
 <body>
-	text : <input id="search" value="volleyball" />	
+	text : <input id="search" value="cats" />	
 	size : <input id="size" value="" />
 	<button id="go">search</button>
+	<span id="wrongsize"><span class="count"></span> of wrong size, 
+		<a href="javascript:void(0);">toggle</a>
+	</span>
 	<div id="content">		
 	</div>
 	<div style="clear:both"></div>
